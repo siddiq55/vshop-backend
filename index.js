@@ -16,14 +16,25 @@ const app = express();
 
 // middleware
 app.use(express.json());
-app.use(cors({
-  origin: [
-    "https://vshop-admin-one.vercel.app", // deployed frontend
-    "http://localhost:5173"               // dev frontend
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
+
+// ---------------- CORS ----------------
+const allowedOrigins = [
+  "https://vshop-admin-one.vercel.app",
+  "http://localhost:5173"
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") return res.status(200).end(); // handle preflight
+  next();
+});
 
 app.use('/addproduct', productRoutes);
 app.use('/removeproduct', productRoutes);
