@@ -16,7 +16,14 @@ const app = express();
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://vshop-admin-one.vercel.app", // deployed frontend
+    "http://localhost:5173"               // dev frontend
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
 
 app.use('/addproduct', productRoutes);
 app.use('/removeproduct', productRoutes);
