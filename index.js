@@ -110,12 +110,25 @@ const connectDB = async () => {
   }
 };
 
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Backend is running on Vercel 🚀",
-    timestamp: new Date().toISOString()
-  });
+app.get("/", async (req, res) => {
+  try {
+  
+    await connectDB();
+
+    // Check connection state
+    const dbState = mongoose.connection.readyState; 
+    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+
+    res.json({
+      message: "Backend is running on Vercel 🚀",
+      mongodb: dbState === 1 ? "Connected ✅" : "Not connected ❌",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+    });
+  }
 });
 
 
