@@ -13,11 +13,11 @@ dotenv.config(); // Load environment variables
 
 
 const app = express();
-const cors = require('cors');
+
 
 // middleware
 app.use(express.json());
-app.use(cors({ origin: '*' })); // Allow all origins for simplicity
+app.use(cors({ origin: 'https://vshop-backend.vercel.app/' }));
 
 // Routes
 
