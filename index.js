@@ -67,42 +67,37 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Upload endpoint to Cloudinary.....................................................
-app.post("/upload", async (req, res) => {
-  // ✅ Set CORS headers for deployed frontend
+// -------------------- OPTIONS preflight --------------------
+app.options("/upload", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "https://vshop-admin-one.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.status(200).end();
+});
 
-  // ✅ Handle preflight request
-  if (req.method === "OPTIONS") return res.status(200).end();
+// -------------------- POST /upload --------------------
+app.post("/upload", (req, res) => {
+  // CORS header for actual POST
+  res.setHeader("Access-Control-Allow-Origin", "https://vshop-admin-one.vercel.app");
 
-  // Use Multer to handle file upload
   upload.single("image")(req, res, async (err) => {
     if (err) return res.status(500).json({ success: 0, message: err.message });
     if (!req.file) return res.status(400).json({ success: 0, message: "No file uploaded" });
 
-    try {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "upload/images", resource_type: "auto" },
-        (error, result) => {
-          if (error) return res.status(500).json({ success: 0, message: error.message });
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "upload/images", resource_type: "auto" },
+      (error, result) => {
+        if (error) return res.status(500).json({ success: 0, message: error.message });
 
-          res.json({
-            success: 1,
-            file: {
-              filename: result.public_id,
-              originalname: req.file.originalname,
-              size: req.file.size
-            },
-            imageUrl: result.secure_url
-          });
-        }
-      );
+        res.json({
+          success: 1,
+          file: { filename: result.public_id, originalname: req.file.originalname, size: req.file.size },
+          imageUrl: result.secure_url
+        });
+      }
+    );
 
-      Readable.from(req.file.buffer).pipe(uploadStream);
-    } catch (error) {
-      res.status(500).json({ success: 0, message: error.message });
-    }
+    Readable.from(req.file.buffer).pipe(uploadStream);
   });
 });
 
