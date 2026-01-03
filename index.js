@@ -98,6 +98,13 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 
 
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend is running on Vercel 🚀",
+    timestamp: new Date().toISOString()
+  });
+});
 
 
 export default app;
