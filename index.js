@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
-
+import cors from 'cors';
 import path from 'path';
 import productRoutes from './routes/productRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -14,12 +14,9 @@ dotenv.config(); // Load environment variables
 
 const app = express();
 
-
 // middleware
 app.use(express.json());
-
-
-// Routes
+app.use(cors());
 
 app.use('/addproduct', productRoutes);
 app.use('/removeproduct', productRoutes);

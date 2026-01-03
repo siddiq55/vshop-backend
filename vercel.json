@@ -12,7 +12,7 @@
    "src": "/(.*)",
    "dest": "index.js",
     "methods": ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
-    "headers": { "Access-Control-Allow-Origin": "*" }
+    "headers": { "Access-Control-Allow-Origin": "https://vshop-backend-g1e4.vercel.app/" }
   }
  ]
 }
