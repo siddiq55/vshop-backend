@@ -11,30 +11,12 @@ import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables
 
-const port = process.env.PORT || 4000;
+
 const app = express();
 
 // middleware
 app.use(express.json());
-
-// ---------------- CORS ----------------
-const allowedOrigins = [
-  "https://vshop-admin-one.vercel.app",
-  "http://localhost:5173"
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") return res.status(200).end(); // handle preflight
-  next();
-});
+app.use(cors());
 
 app.use('/addproduct', productRoutes);
 app.use('/removeproduct', productRoutes);
@@ -67,40 +49,50 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Upload endpoint to Cloudinary.....................................................
-// -------------------- OPTIONS preflight --------------------
-app.options("/upload", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://vshop-admin-one.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.status(200).end();
-});
+app.post('/upload', upload.single('image'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: 0, message: 'No files uploaded.' });
+    }
 
-// -------------------- POST /upload --------------------
-app.post("/upload", (req, res) => {
-  // CORS header for actual POST
-  res.setHeader("Access-Control-Allow-Origin", "https://vshop-admin-one.vercel.app");
+    try {
+        // Upload buffer to Cloudinary
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'upload/images',
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    return res.status(500).json({ 
+                        success: 0, 
+                        message: 'Cloudinary upload failed', 
+                        error: error.message 
+                    });
+                }
 
-  upload.single("image")(req, res, async (err) => {
-    if (err) return res.status(500).json({ success: 0, message: err.message });
-    if (!req.file) return res.status(400).json({ success: 0, message: "No file uploaded" });
+                res.json({
+                    success: 1,
+                    file: {
+                        filename: result.public_id,
+                        originalname: req.file.originalname,
+                        size: req.file.size
+                    },
+                    imageUrl: result.secure_url
+                });
+            }
+        );
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "upload/images", resource_type: "auto" },
-      (error, result) => {
-        if (error) return res.status(500).json({ success: 0, message: error.message });
+        // Convert buffer to stream and upload
+        Readable.from(req.file.buffer).pipe(uploadStream);
 
-        res.json({
-          success: 1,
-          file: { filename: result.public_id, originalname: req.file.originalname, size: req.file.size },
-          imageUrl: result.secure_url
+    } catch (error) {
+        res.status(500).json({ 
+            success: 0, 
+            message: 'Server error', 
+            error: error.message 
         });
-      }
-    );
-
-    Readable.from(req.file.buffer).pipe(uploadStream);
-  });
+    }
 });
-
 
 //...............................................................................................
 
@@ -118,25 +110,13 @@ const connectDB = async () => {
   }
 };
 
-app.get("/", async (req, res) => {
-  try {
-   
-    await connectDB();
-
-    // Check connection state
-    const dbState = mongoose.connection.readyState; 
-    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
-
-    res.json({
-      message: "Backend is running on Vercel 🚀",
-      mongodb: dbState === 1 ? "Connected ✅" : "Not connected ❌",
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
-  }
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend is running on Vercel 🚀",
+    timestamp: new Date().toISOString()
+  });
 });
+
 
 export default app;
