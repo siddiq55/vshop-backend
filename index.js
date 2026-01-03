@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
-import cors from 'cors';
+
 import path from 'path';
 import productRoutes from './routes/productRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -17,7 +17,7 @@ const app = express();
 
 // middleware
 app.use(express.json());
-app.use(cors({ origin: 'https://vshop-backend.vercel.app/' }));
+
 
 // Routes
 
