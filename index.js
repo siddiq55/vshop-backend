@@ -13,10 +13,13 @@ dotenv.config(); // Load environment variables
 
 
 const app = express();
+const cors = require('cors');
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: '*' })); // Allow all origins for simplicity
+
+// Routes
 
 app.use('/addproduct', productRoutes);
 app.use('/removeproduct', productRoutes);
